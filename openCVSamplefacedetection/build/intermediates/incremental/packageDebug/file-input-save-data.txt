@@ -1,0 +1,27 @@
+#Internal package file, do not edit.
+#Thu May 18 18:02:00 CST 2017
+2.base=E\:\\StudioProjects\\face-detection\\openCVSamplefacedetection\\build\\intermediates\\res\\resources-debug.ap_
+5.file=E\:\\StudioProjects\\face-detection\\openCVSamplefacedetection\\build\\intermediates\\res\\resources-debug.ap_\\res\\drawable\\icon.png
+5.set=ANDROID_RESOURCE
+3.base=E\:\\StudioProjects\\face-detection\\openCVSamplefacedetection\\build\\intermediates\\res\\resources-debug.ap_
+6.file=E\:\\StudioProjects\\face-detection\\openCVSamplefacedetection\\build\\intermediates\\transforms\\stripDebugSymbol\\debug\\folders\\2000\\1f\\main\\lib\\armeabi-v7a\\libdetection_based_tracker.so
+2.set=ANDROID_RESOURCE
+4.base=E\:\\StudioProjects\\face-detection\\openCVSamplefacedetection\\build\\intermediates\\res\\resources-debug.ap_
+7.file=E\:\\StudioProjects\\face-detection\\openCVSamplefacedetection\\build\\intermediates\\transforms\\dex\\debug\\folders\\1000\\1f\\main\\classes.dex
+7.set=DEX
+count=8
+0.file=E\:\\StudioProjects\\face-detection\\openCVSamplefacedetection\\build\\intermediates\\transforms\\stripDebugSymbol\\debug\\folders\\2000\\1f\\main\\lib\\armeabi-v7a\\libopencv_java3.so
+5.base=E\:\\StudioProjects\\face-detection\\openCVSamplefacedetection\\build\\intermediates\\res\\resources-debug.ap_
+4.set=ANDROID_RESOURCE
+6.base=E\:\\StudioProjects\\face-detection\\openCVSamplefacedetection\\build\\intermediates\\transforms\\stripDebugSymbol\\debug\\folders\\2000\\1f\\main
+1.file=E\:\\StudioProjects\\face-detection\\openCVSamplefacedetection\\build\\intermediates\\res\\resources-debug.ap_\\res\\layout\\face_detect_surface_view.xml
+1.set=ANDROID_RESOURCE
+7.base=E\:\\StudioProjects\\face-detection\\openCVSamplefacedetection\\build\\intermediates\\transforms\\dex\\debug\\folders\\1000\\1f\\main
+2.file=E\:\\StudioProjects\\face-detection\\openCVSamplefacedetection\\build\\intermediates\\res\\resources-debug.ap_\\AndroidManifest.xml
+6.set=NATIVE_RESOURCE
+0.base=E\:\\StudioProjects\\face-detection\\openCVSamplefacedetection\\build\\intermediates\\transforms\\stripDebugSymbol\\debug\\folders\\2000\\1f\\main
+3.file=E\:\\StudioProjects\\face-detection\\openCVSamplefacedetection\\build\\intermediates\\res\\resources-debug.ap_\\res\\raw\\lbpcascade_frontalface.xml
+3.set=ANDROID_RESOURCE
+1.base=E\:\\StudioProjects\\face-detection\\openCVSamplefacedetection\\build\\intermediates\\res\\resources-debug.ap_
+4.file=E\:\\StudioProjects\\face-detection\\openCVSamplefacedetection\\build\\intermediates\\res\\resources-debug.ap_\\resources.arsc
+0.set=NATIVE_RESOURCE

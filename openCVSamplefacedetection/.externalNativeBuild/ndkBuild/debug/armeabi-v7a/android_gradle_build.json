@@ -1,0 +1,33 @@
+{
+  "buildFiles": [
+    "E:\\StudioProjects\\face-detection\\openCVSamplefacedetection\\src\\main\\jni\\Android.mk",
+    "E:\\StudioProjects\\face-detection\\openCVSamplefacedetection\\src\\main\\jni\\Application.mk"
+  ],
+  "cleanCommands": [
+    "E:\\Program\\Android\\sdk\\ndk-bundle\\ndk-build.cmd NDK_PROJECT_PATH\u003dnull APP_BUILD_SCRIPT\u003dE:\\StudioProjects\\face-detection\\openCVSamplefacedetection\\src\\main\\jni\\Android.mk NDK_APPLICATION_MK\u003dE:\\StudioProjects\\face-detection\\openCVSamplefacedetection\\src\\main\\jni\\Application.mk APP_ABI\u003darmeabi-v7a NDK_ALL_ABIS\u003darmeabi-v7a NDEBUG\u003d1 APP_PLATFORM\u003dandroid-9 NDK_OUT\u003dE:\\StudioProjects\\face-detection\\openCVSamplefacedetection\\.externalNativeBuild\\ndkBuild\\debug\\obj NDK_LIBS_OUT\u003dE:\\StudioProjects\\face-detection\\openCVSamplefacedetection\\build\\intermediates\\ndkBuild\\debug\\lib clean"
+  ],
+  "libraries": {
+    "detection_based_tracker-debug-armeabi-v7a": {
+      "buildCommand": "E:\\Program\\Android\\sdk\\ndk-bundle\\ndk-build.cmd NDK_PROJECT_PATH\u003dnull APP_BUILD_SCRIPT\u003dE:\\StudioProjects\\face-detection\\openCVSamplefacedetection\\src\\main\\jni\\Android.mk NDK_APPLICATION_MK\u003dE:\\StudioProjects\\face-detection\\openCVSamplefacedetection\\src\\main\\jni\\Application.mk APP_ABI\u003darmeabi-v7a NDK_ALL_ABIS\u003darmeabi-v7a NDEBUG\u003d1 APP_PLATFORM\u003dandroid-9 NDK_OUT\u003dE:\\StudioProjects\\face-detection\\openCVSamplefacedetection\\.externalNativeBuild\\ndkBuild\\debug\\obj NDK_LIBS_OUT\u003dE:\\StudioProjects\\face-detection\\openCVSamplefacedetection\\build\\intermediates\\ndkBuild\\debug\\lib E:\\StudioProjects\\face-detection\\openCVSamplefacedetection\\.externalNativeBuild\\ndkBuild\\debug\\obj/local/armeabi-v7a/libdetection_based_tracker.so",
+      "toolchain": "toolchain-armeabi-v7a",
+      "abi": "armeabi-v7a",
+      "artifactName": "detection_based_tracker",
+      "files": [
+        {
+          "src": "E:\\StudioProjects\\face-detection\\openCVSamplefacedetection\\src\\main\\jni\\DetectionBasedTracker_jni.cpp",
+          "flags": "\"-gcc-toolchain\" \"E:/Program/Android/sdk/ndk-bundle/build//../toolchains/arm-linux-androideabi-4.9/prebuilt/windows-x86_64\" \"-fpic\" \"-ffunction-sections\" \"-funwind-tables\" \"-fstack-protector-strong\" \"-Wno-invalid-command-line-argument\" \"-Wno-unused-command-line-argument\" \"-no-canonical-prefixes\" \"-fno-integrated-as\" \"-g\" \"-target\" \"armv7-none-linux-androideabi\" \"-march\u003darmv7-a\" \"-mfloat-abi\u003dsoftfp\" \"-mfpu\u003dvfpv3-d16\" \"-fno-exceptions\" \"-fno-rtti\" \"-mthumb\" \"-Os\" \"-DNDEBUG\" \"-IE:/OpenCV-android-sdk/sdk/native/jni/include/opencv\" \"-IE:/OpenCV-android-sdk/sdk/native/jni/include\" \"-IE:/StudioProjects/face-detection/openCVSamplefacedetection/src/main/jni\" \"-IE:/Program/Android/sdk/ndk-bundle/build//../sources/cxx-stl/gnu-libstdc++/4.9/include\" \"-IE:/Program/Android/sdk/ndk-bundle/build//../sources/cxx-stl/gnu-libstdc++/4.9/libs/armeabi-v7a/include\" \"-IE:/Program/Android/sdk/ndk-bundle/build//../sources/cxx-stl/gnu-libstdc++/4.9/include/backward\" \"-IE:/StudioProjects/face-detection/openCVSamplefacedetection/src/main/jni\" \"-DANDROID\" \"-fPIC\" \"-DANDROID\" \"-fsigned-char\" \"-Wa,--noexecstack\" \"-Wformat\" \"-Werror\u003dformat-security\" \"-frtti\" \"-fexceptions\" \"--sysroot\" \"E:/Program/Android/sdk/ndk-bundle/build//../platforms/android-9/arch-arm\""
+        }
+      ],
+      "output": "E:\\StudioProjects\\face-detection\\openCVSamplefacedetection\\.externalNativeBuild\\ndkBuild\\debug\\obj\\local\\armeabi-v7a\\libdetection_based_tracker.so"
+    }
+  },
+  "toolchains": {
+    "toolchain-armeabi-v7a": {
+      "cppCompilerExecutable": "E:\\Program\\Android\\sdk\\ndk-bundle\\build\\..\\toolchains\\llvm\\prebuilt\\windows-x86_64\\bin\\clang++.exe"
+    }
+  },
+  "cFileExtensions": [],
+  "cppFileExtensions": [
+    "cpp"
+  ]
+}
