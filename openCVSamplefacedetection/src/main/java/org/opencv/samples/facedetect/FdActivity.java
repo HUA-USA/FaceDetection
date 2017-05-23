@@ -6,19 +6,22 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import org.opencv.android.BaseLoaderCallback;
+import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewFrame;
+import org.opencv.android.CameraBridgeViewBase.CvCameraViewListener2;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfRect;
+import org.opencv.core.Point;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
-import org.opencv.android.CameraBridgeViewBase;
-import org.opencv.android.CameraBridgeViewBase.CvCameraViewListener2;
-import org.opencv.objdetect.CascadeClassifier;
+
 import org.opencv.imgproc.Imgproc;
+import org.opencv.objdetect.CascadeClassifier;
+import org.opencv.objdetect.Objdetect;
 
 import android.app.Activity;
 import android.content.Context;
@@ -39,13 +42,18 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
     private MenuItem               mItemFace40;
     private MenuItem               mItemFace30;
     private MenuItem               mItemFace20;
-    private MenuItem               mItemType;
+    // private MenuItem               mItemType;
 
     private Mat                    mRgba;
     private Mat                    mGray;
     private File                   mCascadeFile;
     private CascadeClassifier      mJavaDetector;
-    private DetectionBasedTracker  mNativeDetector;
+
+    private File                   mCascadeFileEye;
+    private File                   mCascadeFileShoulder;
+
+    private CascadeClassifier      mJavaDetectorEye;
+    private CascadeClassifier      mJavaDetectorShoulder;
 
     private int                    mDetectorType       = JAVA_DETECTOR;
     private String[]               mDetectorName;
@@ -63,14 +71,11 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
                 {
                     Log.i(TAG, "OpenCV loaded successfully");
 
-                    // Load native library after(!) OpenCV initialization
-                    System.loadLibrary("detection_based_tracker");
-
                     try {
                         // load cascade file from application resources
-                        InputStream is = getResources().openRawResource(R.raw.lbpcascade_frontalface);
+                        InputStream is = getResources().openRawResource(R.raw.haarcascade_frontalface_default);
                         File cascadeDir = getDir("cascade", Context.MODE_PRIVATE);
-                        mCascadeFile = new File(cascadeDir, "lbpcascade_frontalface.xml");
+                        mCascadeFile = new File(cascadeDir, "haarcascade_frontalface_default.xml");
                         FileOutputStream os = new FileOutputStream(mCascadeFile);
 
                         byte[] buffer = new byte[4096];
@@ -88,15 +93,58 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
                         } else
                             Log.i(TAG, "Loaded cascade classifier from " + mCascadeFile.getAbsolutePath());
 
-                        mNativeDetector = new DetectionBasedTracker(mCascadeFile.getAbsolutePath(), 0);
+                        // load cascade file from application resources
+                        InputStream isEYE = getResources().openRawResource(R.raw.haarcascade_eye_tree_eyeglasses);
+                        File cascadeDirEYE = getDir("cascadeEYE", Context.MODE_PRIVATE);
+                        mCascadeFileEye = new File(cascadeDirEYE, "haarcascade_eye_tree_eyeglasses.xml");
+                        FileOutputStream osEYE = new FileOutputStream(mCascadeFileEye);
+
+                        byte[] bufferEYE = new byte[4096];
+                        int bytesReadEYE;
+                        while ((bytesReadEYE = isEYE.read(bufferEYE)) != -1) {
+                            osEYE.write(bufferEYE, 0, bytesReadEYE);
+                        }
+                        isEYE.close();
+                        osEYE.close();
+
+                        mJavaDetectorEye = new CascadeClassifier(mCascadeFileEye.getAbsolutePath());
+                        if (mJavaDetectorEye.empty()) {
+                            Log.e(TAG, "Failed to load cascade classifier");
+                            mJavaDetectorEye = null;
+                        } else
+                            Log.i(TAG, "Loaded cascade classifier for eye from " + mCascadeFile.getAbsolutePath());
+
+                        // load cascade file from application resources
+                        InputStream isShoulder = getResources().openRawResource(R.raw.haarcascade_mcs_upperbody);
+                        File cascadeDirShoulder = getDir("cascadeShoulder", Context.MODE_PRIVATE);
+                        mCascadeFileShoulder = new File(cascadeDirShoulder, "haarcascade_mcs_upperbody.xml");
+                        FileOutputStream osShoulder = new FileOutputStream(mCascadeFileShoulder);
+
+                        byte[] bufferShoulder = new byte[4096];
+                        int bytesReadShoulder;
+                        while ((bytesReadShoulder = isShoulder.read(bufferShoulder)) != -1) {
+                            osShoulder.write(bufferShoulder, 0, bytesReadShoulder);
+                        }
+                        isShoulder.close();
+                        osShoulder.close();
+
+                        mJavaDetectorShoulder = new CascadeClassifier(mCascadeFileShoulder.getAbsolutePath());
+                        if (mJavaDetectorShoulder.empty()) {
+                            Log.e(TAG, "Failed to load cascade classifier");
+                            mJavaDetectorShoulder = null;
+                        } else
+                            Log.i(TAG, "Loaded cascade classifier for upper body from " + mCascadeFile.getAbsolutePath());
 
                         cascadeDir.delete();
+                        cascadeDirEYE.delete();
+                        cascadeDirShoulder.delete();
 
                     } catch (IOException e) {
                         e.printStackTrace();
                         Log.e(TAG, "Failed to load cascade. Exception thrown: " + e);
                     }
 
+                    mOpenCvCameraView.setCameraIndex(1);
                     mOpenCvCameraView.enableView();
                 } break;
                 default:
@@ -110,7 +158,6 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
     public FdActivity() {
         mDetectorName = new String[2];
         mDetectorName[JAVA_DETECTOR] = "Java";
-        mDetectorName[NATIVE_DETECTOR] = "Native (tracking)";
 
         Log.i(TAG, "Instantiated new " + this.getClass());
     }
@@ -170,35 +217,52 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
         mRgba = inputFrame.rgba();
         mGray = inputFrame.gray();
 
-        Core.flip(mRgba, mRgba, 1);
-        Core.flip(mGray, mGray, 1);
+//        Core.flip(mRgba, mRgba, 1);
+//        Core.flip(mGray, mGray, 1);
+
+//        Imgproc.equalizeHist(mGray, mGray);
 
         if (mAbsoluteFaceSize == 0) {
             int height = mGray.rows();
             if (Math.round(height * mRelativeFaceSize) > 0) {
                 mAbsoluteFaceSize = Math.round(height * mRelativeFaceSize);
             }
-            mNativeDetector.setMinFaceSize(mAbsoluteFaceSize);
         }
 
         MatOfRect faces = new MatOfRect();
+        MatOfRect eyes = new MatOfRect();
+        MatOfRect shoulders = new MatOfRect();
 
         if (mDetectorType == JAVA_DETECTOR) {
             if (mJavaDetector != null)
                 mJavaDetector.detectMultiScale(mGray, faces, 1.1, 2, 2, // TODO: objdetect.CV_HAAR_SCALE_IMAGE
                         new Size(mAbsoluteFaceSize, mAbsoluteFaceSize), new Size());
         }
-        else if (mDetectorType == NATIVE_DETECTOR) {
-            if (mNativeDetector != null)
-                mNativeDetector.detect(mGray, faces);
-        }
         else {
             Log.e(TAG, "Detection method is not selected!");
         }
 
         Rect[] facesArray = faces.toArray();
-        for (int i = 0; i < facesArray.length; i++)
-            Imgproc.rectangle(mRgba, facesArray[i].tl(), facesArray[i].br(), FACE_RECT_COLOR, 3);
+        for (int i = 0; i < facesArray.length; i++) {
+
+            Mat mFace = mGray.submat(facesArray[i]);
+
+            if (mJavaDetectorEye != null) {
+                mJavaDetectorEye.detectMultiScale(mFace, eyes, 1.1, 2,
+                        0| Objdetect.CASCADE_SCALE_IMAGE, new Size(0, 0), new Size());
+                if (!eyes.empty()) {
+//                  mJavaDetectorShoulder.detectMultiScale(mGray, shoulders, 1.1, 2,
+//                            0|Objdetect.CASCADE_SCALE_IMAGE, new Size(), new Size());
+                    Imgproc.rectangle(mRgba, facesArray[i].tl(), facesArray[i].br(), FACE_RECT_COLOR, 3);
+//                    if (!shoulders.empty()) {
+//                        Rect[] shoulderArray = shoulders.toArray();
+//                        for (int j =0; j < shoulderArray.length; j++) {
+//                            Imgproc.rectangle(mRgba, shoulderArray[j].tl(), shoulderArray[j].br(), FACE_RECT_COLOR, 3);
+//                        }
+//                    }
+                }
+            }
+        }
 
         return mRgba;
     }
@@ -210,7 +274,7 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
         mItemFace40 = menu.add("Face size 40%");
         mItemFace30 = menu.add("Face size 30%");
         mItemFace20 = menu.add("Face size 20%");
-        mItemType   = menu.add(mDetectorName[mDetectorType]);
+        // mItemType   = menu.add(mDetectorName[mDetectorType]);
         return true;
     }
 
@@ -225,11 +289,11 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
             setMinFaceSize(0.3f);
         else if (item == mItemFace20)
             setMinFaceSize(0.2f);
-        else if (item == mItemType) {
-            int tmpDetectorType = (mDetectorType + 1) % mDetectorName.length;
-            item.setTitle(mDetectorName[tmpDetectorType]);
-            setDetectorType(tmpDetectorType);
-        }
+//        else if (item == mItemType) {
+//            int tmpDetectorType = (mDetectorType + 1) % mDetectorName.length;
+//            item.setTitle(mDetectorName[tmpDetectorType]);
+//            setDetectorType(tmpDetectorType);
+//        }
         return true;
     }
 
@@ -238,17 +302,17 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
         mAbsoluteFaceSize = 0;
     }
 
-    private void setDetectorType(int type) {
-        if (mDetectorType != type) {
-            mDetectorType = type;
-
-            if (type == NATIVE_DETECTOR) {
-                Log.i(TAG, "Detection Based Tracker enabled");
-                mNativeDetector.start();
-            } else {
-                Log.i(TAG, "Cascade detector enabled");
-                mNativeDetector.stop();
-            }
-        }
-    }
+//    private void setDetectorType(int type) {
+//        if (mDetectorType != type) {
+//            mDetectorType = type;
+//
+//            if (type == NATIVE_DETECTOR) {
+//                Log.i(TAG, "Detection Based Tracker enabled");
+//                mNativeDetector.start();
+//            } else {
+//                Log.i(TAG, "Cascade detector enabled");
+//                mNativeDetector.stop();
+//            }
+//        }
+//    }
 }
