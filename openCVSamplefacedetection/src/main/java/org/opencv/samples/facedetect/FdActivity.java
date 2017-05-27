@@ -38,6 +38,9 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
     public static final int        JAVA_DETECTOR       = 0;
     public static final int        NATIVE_DETECTOR     = 1;
 
+    public static final int       MAXIMUM_ALLOWED_SKIPPED_FRAMES = 10;
+    public static final int       MAXIMUM_PREDICTED_FRAMES = 30;
+
     private MenuItem               mItemFace50;
     private MenuItem               mItemFace40;
     private MenuItem               mItemFace30;
@@ -62,6 +65,18 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
     private int                    mAbsoluteFaceSize   = 0;
 
     private CameraBridgeViewBase   mOpenCvCameraView;
+
+    private Mat                    pre_face;
+    private Mat                    pre_shoulder;
+
+    private Rect                   face_frame;
+    private Rect                   shoulder_frame;
+
+    private int                   face_skip_frame = 0;
+    private int                   shoulder_skip_frame = 0;
+
+    boolean                       FaceDetected = false;
+    boolean                       ShoulderDetected = false;
 
     private BaseLoaderCallback  mLoaderCallback = new BaseLoaderCallback(this) {
         @Override
@@ -229,7 +244,32 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
             }
         }
 
-        ShoulderDetector(mGray);
+        if (!FaceDetected) {
+            face_frame = FaceDetector(mGray);
+            show_face();
+        } else {
+            if (face_skip_frame > 0 && face_skip_frame < MAXIMUM_PREDICTED_FRAMES) {
+                show_face();
+            } else FaceDetected = false;
+
+            if (face_skip_frame == 0 || face_skip_frame > MAXIMUM_ALLOWED_SKIPPED_FRAMES) {
+                face_frame = FaceDetector(mGray);
+            }
+        }
+
+//        if (FaceDetected && face_skip_frame > 1 && face_skip_frame <= MAXIMUM_ALLOWED_SKIPPED_FRAMES) {
+//            if (shoulder)
+//        }
+//
+//        if (FaceDetected && !ShoulderDetected) {
+//            shoulder_frame = ShoulderDetector(mGray);
+//        } else {
+//            if (shoulder_skip_frame > 0 || shoulder_skip_frame < MAXIMUM_PREDICTED_FRAMES)
+//                show_shoulder();
+//
+//            if (shoulder_skip_frame == 0 || shoulder_skip_frame > MAXIMUM_ALLOWED_SKIPPED_FRAMES)
+//                shoulder_frame = ShoulderDetector(mGray);
+//        }
 
         return mRgba;
     }
@@ -283,55 +323,54 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
 //        }
 //    }
 
-    private void FaceAndShoulderDetector (Mat gray) {
-
-        MatOfRect faces = new MatOfRect();
-        MatOfRect eyes = new MatOfRect();
-        MatOfRect shoulders = new MatOfRect();
-
-        if (mDetectorType == JAVA_DETECTOR) {
-            if (mJavaDetector != null)
-                mJavaDetector.detectMultiScale(gray, faces, 1.1, 2, 2, // TODO: objdetect.CV_HAAR_SCALE_IMAGE
-                        new Size(mAbsoluteFaceSize, mAbsoluteFaceSize), new Size());
-        }
-        else {
-            Log.e(TAG, "Detection method is not selected!");
-            return;
-        }
-
-        Rect[] facesArray = faces.toArray();
-        for (int i = 0; i < facesArray.length; i++) {
-
-            Mat mFace = gray.submat(facesArray[i]);
-
-            if (mJavaDetectorEye != null) {
-                mJavaDetectorEye.detectMultiScale(mFace, eyes, 1.1, 2,
-                        Objdetect.CASCADE_SCALE_IMAGE, new Size(0, 0), new Size());
-                if (!eyes.empty()) {
-                    Imgproc.rectangle(mRgba, facesArray[i].tl(), facesArray[i].br(), FACE_RECT_COLOR, 3);
-                    mJavaDetectorShoulder.detectMultiScale(mGray, shoulders, 1.1, 2,
-                            Objdetect.CASCADE_SCALE_IMAGE, new Size(), new Size());
-                    if (!shoulders.empty()) {
-                        Rect[] shoulderArray = shoulders.toArray();
-                        for (int j =0; j < shoulderArray.length; j++) {
-                            Imgproc.rectangle(mRgba, shoulderArray[j].tl(), shoulderArray[j].br(), FACE_RECT_COLOR, 3);
-//                            if ((shoulderArray[j].x < facesArray[i].x) && (facesArray[i].width * 1.2 < shoulderArray[j].width)) {
+//    private void FaceAndShoulderDetector (Mat gray) {
 //
-//                                return;
-//                            }
-                        }
-                        return;
-                    }
-                }
-            }
-        }
-    }
+//        MatOfRect faces = new MatOfRect();
+//        MatOfRect eyes = new MatOfRect();
+//        MatOfRect shoulders = new MatOfRect();
+//
+//        if (mDetectorType == JAVA_DETECTOR) {
+//            if (mJavaDetector != null)
+//                mJavaDetector.detectMultiScale(gray, faces, 1.1, 2, 2, // TODO: objdetect.CV_HAAR_SCALE_IMAGE
+//                        new Size(mAbsoluteFaceSize, mAbsoluteFaceSize), new Size());
+//        }
+//        else {
+//            Log.e(TAG, "Detection method is not selected!");
+//            return;
+//        }
+//
+//        Rect[] facesArray = faces.toArray();
+//        for (int i = 0; i < facesArray.length; i++) {
+//
+//            Mat mFace = gray.submat(facesArray[i]);
+//
+//            if (mJavaDetectorEye != null) {
+//                mJavaDetectorEye.detectMultiScale(mFace, eyes, 1.1, 2,
+//                        Objdetect.CASCADE_SCALE_IMAGE, new Size(0, 0), new Size());
+//                if (!eyes.empty()) {
+//                    Imgproc.rectangle(mRgba, facesArray[i].tl(), facesArray[i].br(), FACE_RECT_COLOR, 3);
+//                    mJavaDetectorShoulder.detectMultiScale(mGray, shoulders, 1.1, 2,
+//                            Objdetect.CASCADE_SCALE_IMAGE, new Size(), new Size());
+//                    if (!shoulders.empty()) {
+//                        Rect[] shoulderArray = shoulders.toArray();
+//                        for (int j =0; j < shoulderArray.length; j++) {
+//                            Imgproc.rectangle(mRgba, shoulderArray[j].tl(), shoulderArray[j].br(), FACE_RECT_COLOR, 3);
+////                            if ((shoulderArray[j].x < facesArray[i].x) && (facesArray[i].width * 1.2 < shoulderArray[j].width)) {
+////
+////                                return;
+////                            }
+//                        }
+//                        return;
+//                    }
+//                }
+//            }
+//        }
+//    }
 
-    private void FaceDetector (Mat gray) {
+    private Rect FaceDetector (Mat gray) {
 
         MatOfRect faces = new MatOfRect();
         MatOfRect eyes = new MatOfRect();
-        MatOfRect shoulders = new MatOfRect();
 
         if (mDetectorType == JAVA_DETECTOR) {
             if (mJavaDetector != null)
@@ -340,7 +379,7 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
         }
         else {
             Log.e(TAG, "Detection method is not selected!");
-            return;
+            return null;
         }
 
         Rect[] facesArray = faces.toArray();
@@ -352,14 +391,17 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
                 mJavaDetectorEye.detectMultiScale(mFace, eyes, 1.1, 2,
                         Objdetect.CASCADE_SCALE_IMAGE, new Size(0, 0), new Size());
                 if (!eyes.empty()) {
-                    Imgproc.rectangle(mRgba, facesArray[i].tl(), facesArray[i].br(), FACE_RECT_COLOR, 3);
-                    return;
+                    FaceDetected = true;
+                    shoulder_skip_frame = 1;
+                    return facesArray[i];
                 }
             }
         }
+
+        return null;
     }
 
-    private void ShoulderDetector (Mat gray) {
+    private Rect ShoulderDetector (Mat gray) {
 
         MatOfRect shoulders = new MatOfRect();
         MatOfRect eyes = new MatOfRect();
@@ -371,7 +413,7 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
         }
         else {
             Log.e(TAG, "Detection method is not selected!");
-            return;
+            return null;
         }
 
         if (!shoulders.empty()) {
@@ -386,12 +428,38 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
                     mJavaDetectorEye.detectMultiScale(mShoulder, eyes, 1.1, 2,
                             Objdetect.CASCADE_SCALE_IMAGE, new Size(0, 0), new Size());
                     if (!eyes.empty()) {
-                        Imgproc.rectangle(mRgba, shouldersArray[i].tl(), shouldersArray[i].br(), FACE_RECT_COLOR, 3);
-                        return;
+                        ShoulderDetected = true;
+                        shoulder_skip_frame = 1;
+                        return shouldersArray[i];
                     }
                 }
             }
         }
+
+        return null;
+    }
+
+    private void show_face() {
+        if (face_frame != null) {
+            if (face_skip_frame < MAXIMUM_PREDICTED_FRAMES) {
+                Imgproc.rectangle(mRgba, face_frame.tl(), face_frame.br(), FACE_RECT_COLOR, 3);
+                face_skip_frame++;
+                return;
+            } else {
+                face_skip_frame = 0;
+            }
+        } else face_skip_frame = 0;
+    }
+
+    private void show_shoulder() {
+        if (shoulder_frame != null) {
+            if (shoulder_skip_frame < MAXIMUM_PREDICTED_FRAMES) {
+                Imgproc.rectangle(mRgba, shoulder_frame.tl(), shoulder_frame.br(), FACE_RECT_COLOR, 3);
+                shoulder_skip_frame++;
+            } else {
+                shoulder_skip_frame = 0;
+            }
+        } else shoulder_skip_frame = 0;
     }
 
 }
