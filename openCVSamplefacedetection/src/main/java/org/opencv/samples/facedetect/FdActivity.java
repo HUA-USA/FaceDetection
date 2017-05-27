@@ -34,11 +34,14 @@ import android.view.WindowManager;
 public class FdActivity extends Activity implements CvCameraViewListener2 {
 
     private static final String    TAG                 = "OCVSample::Activity";
-    private static final Scalar    FACE_RECT_COLOR     = new Scalar(0, 255, 0, 255);
+    private static final Scalar    FACE_RECT_COLOR     = new Scalar(0, 255, 0, 127);
+
+    private static final int      thickness = 2;
+
     public static final int        JAVA_DETECTOR       = 0;
     public static final int        NATIVE_DETECTOR     = 1;
 
-    public static final int       MAXIMUM_ALLOWED_SKIPPED_FRAMES = 10;
+    public static final int       MAXIMUM_ALLOWED_SKIPPED_FRAMES = 15;
     public static final int       MAXIMUM_PREDICTED_FRAMES = 30;
 
     private MenuItem               mItemFace50;
@@ -66,11 +69,11 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
 
     private CameraBridgeViewBase   mOpenCvCameraView;
 
-    private Mat                    pre_face;
-    private Mat                    pre_shoulder;
+    private Rect                   pre_face = null;
+    private Rect                   pre_shoulder = null;
 
-    private Rect                   face_frame;
-    private Rect                   shoulder_frame;
+    private Rect                   face_frame = null;
+    private Rect                   shoulder_frame = null;
 
     private int                   face_skip_frame = 0;
     private int                   shoulder_skip_frame = 0;
@@ -174,6 +177,9 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
         mDetectorName = new String[2];
         mDetectorName[JAVA_DETECTOR] = "Java";
 
+        pre_face = new Rect();
+        face_frame = new Rect();
+
         Log.i(TAG, "Instantiated new " + this.getClass());
     }
 
@@ -246,6 +252,7 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
 
         if (!FaceDetected) {
             face_frame = FaceDetector(mGray);
+            pre_face = face_frame;
             show_face();
         } else {
             if (face_skip_frame > 0 && face_skip_frame < MAXIMUM_PREDICTED_FRAMES) {
@@ -254,6 +261,9 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
 
             if (face_skip_frame == 0 || face_skip_frame > MAXIMUM_ALLOWED_SKIPPED_FRAMES) {
                 face_frame = FaceDetector(mGray);
+                if (face_frame == null) {
+                    face_frame = pre_face;
+                } else pre_face = face_frame;
             }
         }
 
@@ -442,7 +452,7 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
     private void show_face() {
         if (face_frame != null) {
             if (face_skip_frame < MAXIMUM_PREDICTED_FRAMES) {
-                Imgproc.rectangle(mRgba, face_frame.tl(), face_frame.br(), FACE_RECT_COLOR, 3);
+                Imgproc.rectangle(mRgba, face_frame.tl(), face_frame.br(), FACE_RECT_COLOR, thickness);
                 face_skip_frame++;
                 return;
             } else {
@@ -454,7 +464,7 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
     private void show_shoulder() {
         if (shoulder_frame != null) {
             if (shoulder_skip_frame < MAXIMUM_PREDICTED_FRAMES) {
-                Imgproc.rectangle(mRgba, shoulder_frame.tl(), shoulder_frame.br(), FACE_RECT_COLOR, 3);
+                Imgproc.rectangle(mRgba, shoulder_frame.tl(), shoulder_frame.br(), FACE_RECT_COLOR, thickness);
                 shoulder_skip_frame++;
             } else {
                 shoulder_skip_frame = 0;
